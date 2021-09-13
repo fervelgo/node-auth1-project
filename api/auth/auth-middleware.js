@@ -1,3 +1,5 @@
+const bcrypt = require('bcryptjs')
+const User = require('../users/users-model')
 /*
   If the user does not have a session saved in the server
 
@@ -6,8 +8,19 @@
     "message": "You shall not pass!"
   }
 */
-function restricted() {
-
+const restricted = async (req, res, next) => {
+  try {
+    const { username, password } = req.body
+    const [existingUser] = await User.findBy({ username })
+    if(bcrypt.compareSync(password, existingUser.password)){
+      res.json({ message: `welcome back ${existingUser}`})
+      next()
+    } else {
+      next({ message: 'Credentials no bueno', status: 401})
+    }
+  } catch(err) {
+    next(err)
+  }
 }
 
 /*
@@ -46,4 +59,11 @@ function checkPasswordLength() {
 
 }
 
+
+module.exports = {
+  restricted,
+  checkPasswordLength,
+  checkUsernameExists,
+  checkUsernameFree
+}
 // Don't forget to add these to the `exports` object so they can be required in other modules
