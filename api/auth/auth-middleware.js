@@ -16,7 +16,7 @@ const restricted = async (req, res, next) => {
       res.json({ message: `welcome back ${existingUser}`})
       next()
     } else {
-      next({ message: 'Credentials no bueno', status: 401})
+      next({ message: "You shall not pass!", status: 401})
     }
   } catch(err) {
     next(err)
@@ -31,8 +31,18 @@ const restricted = async (req, res, next) => {
     "message": "Username taken"
   }
 */
-function checkUsernameFree() {
-
+const checkUsernameFree = async (req, res, next) => {
+try{
+  const { username } = req.body
+ const existingUser = User.findBy(username)
+ if (!existingUser) {
+   next()
+ } else {
+   next({status: 422, message: "Username taken"})
+ }
+} catch (err) {
+  next(err)
+}
 }
 
 /*
@@ -43,9 +53,21 @@ function checkUsernameFree() {
     "message": "Invalid credentials"
   }
 */
-function checkUsernameExists() {
+const checkUsernameExists = (req, res, next) => {
+  try{
+  const { username } = req.body
+   const existingUser = User.findBy(username)
+   if (!existingUser) {
+    next({status: 401, message: "Invalid credentials"})
+   } else {
+     req.user = existingUser
+     next()
+   }
+  } catch (err) {
+    next(err)
+  }
+  }
 
-}
 
 /*
   If password is missing from req.body, or if it's 3 chars or shorter
@@ -55,7 +77,15 @@ function checkUsernameExists() {
     "message": "Password must be longer than 3 chars"
   }
 */
-function checkPasswordLength() {
+const checkPasswordLength = (req, res, next) => {
+  try{
+    const { password } = req.body
+    if(!password || password.length < 3) {
+      next({message: "Password must be longer than 3 chars"})
+    }
+  } catch (err) {
+    next(err)
+  }
 
 }
 
